@@ -1,4 +1,27 @@
 import copy
+import pygame
+import sys
+
+pygame.init()
+
+screenWidth = 500
+screenHeight = screenWidth
+screen = pygame.display.set_mode((screenWidth, screenHeight))
+boardRender = pygame.image.load("Chess Images/board.png").convert()
+boardRender = pygame.transform.scale(boardRender, (screenWidth, screenHeight))
+
+tileSize = screenWidth/8
+
+imageTypes = ["wp", "wr", "wn", "wb", "wq", "wk", "bp", "br", "bn", "bb", "bq", "bk"]
+imageDict = {}
+
+for pieceType in imageTypes:
+    image = pygame.image.load(f"Chess Images/{pieceType}.png").convert_alpha()
+    image = pygame.transform.scale(image, (tileSize, tileSize))
+    imageDict[pieceType] = image
+
+
+
 class Piece:
     def __init__(self, color, position):
         self.color = color
@@ -293,8 +316,25 @@ validPromotions = ("R", "K", "B", "Q")
 whiteInCheck = False
 blackInCheck = False
 activePlayerInCheck = False
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    screen.blit(boardRender, (0, 0))
 
-while True:
+    for row in range(8):
+        for col in range(8):
+            piece = board[row][col]
+
+            if piece != "  ":
+                x = col * tileSize
+                y = row * tileSize
+
+                screen.blit(imageDict[piece.lower()], (x, y))
+
+    pygame.display.flip()
+
     updateCheck(board)
     if checkmateCheck(board, "White"):
         print("White cannot escape check. Black wins!")
@@ -435,3 +475,5 @@ while True:
                             boardDisplay = True
                             turn += 0
                             break
+pygame.quit()
+sys.exit
