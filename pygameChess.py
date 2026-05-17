@@ -73,14 +73,14 @@ colorDict = {"w":"White", "W":"White", "b":"Black", "B":"Black"}
 rowDividers = ["8", "7", "6", "5", "4", "3", "2", "1"]
 colDividers = ["  A"," B"," C"," D"," E"," F"," G"," H"]
 board = [
-    ["BR","bN","bB","bQ","BK","bB","bN","BR"],
+    ["BR","  ","  ","  ","BK","  ","  ","BR"],
     ["  ","BP","BP","BP","BP","BP","BP","BP"],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["  ","WP","WP","WP","WP","WP","WP","WP"],
-    ["WR","wN","wB","wQ","WK","wB","wN","WR"],
+    ["WR","  ","  ","  ","WK","  ","  ","WR"],
     ["__________________________________________________"]
 ]
 
@@ -139,6 +139,8 @@ def isValidMove(board, current, request, pieceClass, pieceColor):
         return False
 
     if pieceClass == King:
+        if canCastle(board, current, request, pieceColor):
+            return (distX <= 1 and distY <= 1 and distX + distY > 0) or (distX == 2 and distY == 0)
         return distX <= 1 and distY <= 1 and distX + distY > 0
 
     if pieceClass == Pawn:
@@ -297,6 +299,7 @@ def canCastle(board, current, request, color):
                 return False
         
         return True
+    return False
 
 
     
@@ -430,6 +433,10 @@ while running:
                             board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                             board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                             turnTaken = True
+                        elif abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                            print("Invalid move. Check piece movement rules, or make sure nothing is in the way.")
+                            clicking = False
+                            continue
                         elif currentTile[0] == requestedTile[0]:
                             if currentTile[1] == (requestedTile[1] + 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
                                 board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
@@ -456,6 +463,10 @@ while running:
                             board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
                             board[currentTile[1]][currentTile[0]] = "  "
                             turnTaken = True
+                        elif abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                            print("Invalid move. Check piece movement rules, or make sure nothing is in the way.")
+                            clicking = False
+                            continue
                         elif currentTile[0] == requestedTile[0]:
                             if currentTile[1] == (requestedTile[1] - 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
                                 board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
@@ -477,28 +488,27 @@ while running:
                                     board[requestedTile[1]][requestedTile[0]] = board[requestedTile[1]][requestedTile[0]][0] + promote
                                     break
                 elif pieceClass == King:
-                    distanceCheck = (abs(currentTile[0] - requestedTile[0]), abs(currentTile[1] - requestedTile[1]))
-                    if distanceCheck[0] == 2 and canCastle(board, currentTile, requestedTile, pieceColor):
-                        if requestedTile[0] - currentTile[0] == 2:
+                        distanceCheck = (abs(currentTile[0] - requestedTile[0]), abs(currentTile[1] - requestedTile[1]))
+                        if distanceCheck[0] == 2 and canCastle(board, currentTile, requestedTile, pieceColor):
+                            if requestedTile[0] - currentTile[0] == 2:
+                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                board[currentTile[1]][5] = board[currentTile[1]][7]
+                                board[currentTile[1]][7] = "  "
+                                turnTaken = True
+                            else:
+                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                board[currentTile[1]][3] = board[currentTile[1]][0]
+                                board[currentTile[1]][0] = "  "
+                                turnTaken = True
+                        elif distanceCheck[0] <= 1 and distanceCheck[1] <= 1 and sum(distanceCheck) > 0:
                             board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                             board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                            board[currentTile[1]][5] = board[currentTile[1]][7]
-                            board[currentTile[1]][7] = "  "
                             turnTaken = True
                         else:
-                            board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                            board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                            board[currentTile[1]][3] = board[currentTile[1]][0]
-                            board[currentTile[1]][0] = "  "
-                            turnTaken = True
-                    else:
-                        board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                        board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                        turnTaken = True
-                else:
-                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                    turnTaken = True
+                            print("kingfail")
+                            print("Invalid move. Check piece movement rules with HELP.")
                 if turnTaken == True:
                     clicking = False
                     moveClicked = False
