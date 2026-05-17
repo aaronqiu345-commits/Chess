@@ -327,6 +327,7 @@ while True:
     selectedPiecePosition = (colDict[pieceSelect.upper()[0]], rowDict[pieceSelect[1]])
     selectedPieceType = board[selectedPiecePosition[1]][selectedPiecePosition[0]]
     if selectedPieceType == "  ":
+        print(selectedPieceType)
         print(f"Selected empty tile. Select a {colorDict[playerColor]} piece instead.")
     else:
         selectedPieceName = f"{colorDict[selectedPieceType[0]]} {typeDict[selectedPieceType[1]].__name__}"
@@ -360,6 +361,7 @@ while True:
                                         board[lastBlackPassant[0]][lastBlackPassant[1]] = "  "
                                     board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                     board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                    turnTaken = True
                                 elif currentTile[0] == requestedTile[0]:
                                     if currentTile[1] == (requestedTile[1] + 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
                                         board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]

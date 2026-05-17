@@ -20,8 +20,6 @@ for pieceType in imageTypes:
     image = pygame.transform.scale(image, (tileSize, tileSize))
     imageDict[pieceType] = image
 
-
-
 class Piece:
     def __init__(self, color, position):
         self.color = color
@@ -76,12 +74,12 @@ rowDividers = ["8", "7", "6", "5", "4", "3", "2", "1"]
 colDividers = ["  A"," B"," C"," D"," E"," F"," G"," H"]
 board = [
     ["BR","bN","bB","bQ","BK","bB","bN","BR"],
-    ["BP","BP","BP","BP","BP","BP","BP","BP"],
+    ["  ","BP","BP","BP","BP","BP","BP","BP"],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
-    ["WP","WP","WP","WP","WP","WP","WP","WP"],
+    ["  ","WP","WP","WP","WP","WP","WP","WP"],
     ["WR","wN","wB","wQ","WK","wB","wN","WR"],
     ["__________________________________________________"]
 ]
@@ -317,17 +315,31 @@ whiteInCheck = False
 blackInCheck = False
 activePlayerInCheck = False
 running = True
+moveClicked = False
+selectClicked = False
+clicking = False
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            clicking = True
+            x, y = pygame.mouse.get_pos()
+            colClicked = str(int(x/tileSize))
+            rowClicked = str(int(y/tileSize))
+            cord = colDict[colClicked] + str(rowDict[rowClicked])
+            print(cord)
+            if not moveClicked:
+                selectClicked = True
+
     screen.blit(boardRender, (0, 0))
 
     for row in range(8):
         for col in range(8):
             piece = board[row][col]
 
-            if piece != "  ":
+            if piece not in ("  ", "w_", "b_"):
                 x = col * tileSize
                 y = row * tileSize
 
@@ -352,7 +364,6 @@ while running:
         activePlayerInCheck = blackInCheck
         if len(blackPassantShadow) == 2 and board[blackPassantShadow[0]][blackPassantShadow[1]] == "b_":
             board[blackPassantShadow[0]][blackPassantShadow[1]] = "  "
-        
     if boardDisplay == True:
         boardDisplay = False
         for index, line in zip(rowDividers, board):
@@ -362,118 +373,137 @@ while running:
     if activePlayerInCheck == True:
         print("You are in check and must make a move to escape it.")
 
-    pieceSelect = input(f"It's {colorDict[playerColor]}'s turn. Select a {colorDict[playerColor]} piece by tile index:\n")
-    selectedPiecePosition = (colDict[pieceSelect.upper()[0]], rowDict[pieceSelect[1]])
-    selectedPieceType = board[selectedPiecePosition[1]][selectedPiecePosition[0]]
-    if selectedPieceType == "  ":
-        print(f"Selected empty tile. Select a {colorDict[playerColor]} piece instead.")
-    else:
-        selectedPieceName = f"{colorDict[selectedPieceType[0]]} {typeDict[selectedPieceType[1]].__name__}"
-        if colorDict[selectedPieceType[0]] != colorDict[playerColor]:
-            print(f"Wrong color selected. Select a {colorDict[playerColor]} piece instead.")
+    while selectClicked and clicking:
+        selectClicked = False
+        selectedPiecePosition = (int(colDict[cord[0]]), int(rowDict[cord[1]]))
+        print(selectedPiecePosition)
+        selectedPieceType = board[selectedPiecePosition[1]][selectedPiecePosition[0]]
+        if selectedPieceType == "  ":
+            print(f"Selected empty tile. Select a {colorDict[playerColor]} piece instead.")
         else:
-            print(f"Selected {selectedPieceName} at {pieceSelect}.")
-            while True:
-                turnTaken = False
-                pieceClass = typeDict[selectedPieceType[1]]
-                pieceColor = colorDict[selectedPieceType[0]]
-                typeSelect = input(f"If you would like to move the piece, input a tile. \n If you would like piece rules, input HELP. \n To deselect, input BACK. \n")
-                if typeSelect.upper() == "BACK":
-                    break
-                if typeSelect.upper() == "HELP":
-                    pieceClass.move_rules(pieceClass)
-                if len(typeSelect) == 2:
-                    currentTile = (colDict[pieceSelect[0].upper()], rowDict[pieceSelect[1]])
-                    requestedTile = (colDict[typeSelect[0].upper()], rowDict[typeSelect[1]])
-                    if isValidMove(board, currentTile, requestedTile, pieceClass, pieceColor) == False:
-                        print("Invalid move. Check piece movement rules with HELP, or make sure nothing is in the way.")
-                        continue
-                    if checkLegality(board, currentTile, requestedTile, colorDict[playerColor]) == False:
-                        print("That move would put you in check.")
-                        continue
-                    if board[requestedTile[1]][requestedTile[0]] != "  " and colorDict[board[requestedTile[1]][requestedTile[0]][0]] == pieceColor:
-                        print("You may not capture your own pieces.")
-                        continue
-                    if pieceClass == Knight or collisionDetect(board, currentTile, requestedTile) == True:
-                        if pieceClass == Pawn:
-                            if pieceColor == "White":
-                                if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
-                                    if board[requestedTile[1]][requestedTile[0]] == "b_":
-                                        board[lastBlackPassant[0]][lastBlackPassant[1]] = "  "
-                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                elif currentTile[0] == requestedTile[0]:
-                                    if currentTile[1] == (requestedTile[1] + 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
-                                        board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                        board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                        board[requestedTile[1]+1][requestedTile[0]] = "w_"
-                                        whitePassantShadow = (requestedTile[1]+1, requestedTile[0])
-                                        lastWhitePassant = (requestedTile[1], requestedTile[0])
-                                        turnTaken = True
-                                    elif currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
-                                        board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                        board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                        turnTaken = True
-                                if requestedTile[1] == 0:
-                                    while True:
-                                        promote = input("Congratulations, your Pawn has reached the end of the board! \n You may turn it into a Rook (R), Knight (K), Bishop (B), or Queen (Q).")
-                                        if promote.upper() in validPromotions:
-                                            board[requestedTile[1]][requestedTile[0]] = board[requestedTile[1]][requestedTile[0]][0] + promote
-                                            break
-                            else:
-                                if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
-                                    if board[requestedTile[1]][requestedTile[0]] == "w_":
-                                        board[lastWhitePassant[0]][lastWhitePassant[1]] = "  "
-                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
-                                    board[currentTile[1]][currentTile[0]] = "  "
-                                    turnTaken = True
-                                elif currentTile[0] == requestedTile[0]:
-                                    if currentTile[1] == (requestedTile[1] - 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
-                                        board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                        board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
-                                        board[requestedTile[1]-1][requestedTile[0]] = "b_"
-                                        blackPassantShadow = (requestedTile[1]-1, requestedTile[0])
-                                        lastBlackPassant = (requestedTile[1], requestedTile[0])
-                                        board[currentTile[1]][currentTile[0]] = "  "
-                                        turnTaken = True
-                                    elif currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
-                                        board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                        board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
-                                        board[currentTile[1]][currentTile[0]] = "  "
-                                        turnTaken = True
-                                if requestedTile[1] == 7:
-                                    while True:
-                                        promote = input("Congratulations, your Pawn has reached the end of the board! \n You may turn it into a Rook (R), Knight (K), Bishop (B), or Queen (Q).")
-                                        if promote.upper() in validPromotions:
-                                            board[requestedTile[1]][requestedTile[0]] = board[requestedTile[1]][requestedTile[0]][0] + promote
-                                            break
-                        elif pieceClass == King:
-                            distanceCheck = (abs(currentTile[0] - requestedTile[0]), abs(currentTile[1] - requestedTile[1]))
-                            if distanceCheck[0] == 2 and canCastle(board, currentTile, requestedTile, pieceColor):
-                                if requestedTile[0] - currentTile[0] == 2:
-                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                    board[currentTile[1]][5] = board[currentTile[1]][7]
-                                    board[currentTile[1]][7] = "  "
-                                    turnTaken = True
-                                else:
-                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                    board[currentTile[1]][3] = board[currentTile[1]][0]
-                                    board[currentTile[1]][0] = "  "
-                                    turnTaken = True
-                            else:
-                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                turnTaken = True
-                        else:
+            selectedPieceName = f"{colorDict[selectedPieceType[0]]} {typeDict[selectedPieceType[1]].__name__}"
+            if colorDict[selectedPieceType[0]] != colorDict[playerColor]:
+                print(f"Wrong color selected. Select a {colorDict[playerColor]} piece instead.")
+            else:
+                print(f"Selected {selectedPieceName} at {cord}.")
+                moveClicked = True
+                clicking = False
+                break
+
+    while moveClicked and clicking:
+        turnTaken = False
+        pieceClass = typeDict[selectedPieceType[1]]
+        pieceColor = colorDict[selectedPieceType[0]]
+        print(f"If you would like to move the piece, click a tile. \n To deselect, click the tile again. \n")
+        moveCord = (int(colDict[cord[0]]), int(rowDict[cord[1]]))
+        print(moveCord)
+        if moveCord == selectedPiecePosition:
+            print("deselect")
+            selectedPiecePosition = None
+            moveCord = None
+            moveClicked = False
+            selectClicked = False
+            clicking = False
+            break
+        else:
+            print("attempt move")
+            currentTile = selectedPiecePosition
+            requestedTile = moveCord
+            if isValidMove(board, currentTile, requestedTile, pieceClass, pieceColor) == False:
+                print("Invalid move. Check piece movement rules, or make sure nothing is in the way.")
+                clicking = False
+                continue
+            if checkLegality(board, currentTile, requestedTile, colorDict[playerColor]) == False:
+                print("That move would put you in check.")
+                clicking = False
+                continue
+            if board[requestedTile[1]][requestedTile[0]] != "  " and colorDict[board[requestedTile[1]][requestedTile[0]][0]] == pieceColor:
+                print("You may not capture your own pieces.")
+                clicking = False
+                continue
+            if pieceClass == Knight or collisionDetect(board, currentTile, requestedTile) == True:
+                if pieceClass == Pawn:
+                    if pieceColor == "White":
+                        if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
+                            if board[requestedTile[1]][requestedTile[0]] == "b_":
+                                board[lastBlackPassant[0]][lastBlackPassant[1]] = "  "
                             board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                             board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                             turnTaken = True
-                        if turnTaken == True:
-                            boardDisplay = True
-                            turn += 0
-                            break
+                        elif currentTile[0] == requestedTile[0]:
+                            if currentTile[1] == (requestedTile[1] + 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                board[requestedTile[1]+1][requestedTile[0]] = "w_"
+                                whitePassantShadow = (requestedTile[1]+1, requestedTile[0])
+                                lastWhitePassant = (requestedTile[1], requestedTile[0])
+                                turnTaken = True
+                            elif currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                turnTaken = True
+                        if requestedTile[1] == 0:
+                            while True:
+                                promote = input("Congratulations, your Pawn has reached the end of the board! \n You may turn it into a Rook (R), Knight (K), Bishop (B), or Queen (Q).")
+                                if promote.upper() in validPromotions:
+                                    board[requestedTile[1]][requestedTile[0]] = board[requestedTile[1]][requestedTile[0]][0] + promote
+                                    break
+                    else:
+                        if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
+                            if board[requestedTile[1]][requestedTile[0]] == "w_":
+                                board[lastWhitePassant[0]][lastWhitePassant[1]] = "  "
+                            board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                            board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
+                            board[currentTile[1]][currentTile[0]] = "  "
+                            turnTaken = True
+                        elif currentTile[0] == requestedTile[0]:
+                            if currentTile[1] == (requestedTile[1] - 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
+                                board[requestedTile[1]-1][requestedTile[0]] = "b_"
+                                blackPassantShadow = (requestedTile[1]-1, requestedTile[0])
+                                lastBlackPassant = (requestedTile[1], requestedTile[0])
+                                board[currentTile[1]][currentTile[0]] = "  "
+                                turnTaken = True
+                            elif currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
+                                board[currentTile[1]][currentTile[0]] = "  "
+                                turnTaken = True
+                        if requestedTile[1] == 7:
+                            while True:
+                                promote = input("Congratulations, your Pawn has reached the end of the board! \n You may turn it into a Rook (R), Knight (K), Bishop (B), or Queen (Q).")
+                                if promote.upper() in validPromotions:
+                                    board[requestedTile[1]][requestedTile[0]] = board[requestedTile[1]][requestedTile[0]][0] + promote
+                                    break
+                elif pieceClass == King:
+                    distanceCheck = (abs(currentTile[0] - requestedTile[0]), abs(currentTile[1] - requestedTile[1]))
+                    if distanceCheck[0] == 2 and canCastle(board, currentTile, requestedTile, pieceColor):
+                        if requestedTile[0] - currentTile[0] == 2:
+                            board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                            board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                            board[currentTile[1]][5] = board[currentTile[1]][7]
+                            board[currentTile[1]][7] = "  "
+                            turnTaken = True
+                        else:
+                            board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                            board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                            board[currentTile[1]][3] = board[currentTile[1]][0]
+                            board[currentTile[1]][0] = "  "
+                            turnTaken = True
+                    else:
+                        board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                        board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                        turnTaken = True
+                else:
+                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                    turnTaken = True
+                if turnTaken == True:
+                    clicking = False
+                    moveClicked = False
+                    boardDisplay = True
+                    turn += 1
+                    break
 pygame.quit()
 sys.exit
