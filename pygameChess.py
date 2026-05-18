@@ -60,8 +60,6 @@ lastBlackPassant = ""
 whitePassantShadow = ""
 blackPassantShadow = ""
 validPromotions = ("R", "K", "B", "Q")
-whiteInCheck = False
-blackInCheck = False
 activePlayerInCheck = False
 running = True
 gamestate = "start"
@@ -75,7 +73,7 @@ while running:
             colClicked = str(int(x/tileSize))
             rowClicked = str(int(y/tileSize))
             cord = colDict[colClicked] + str(rowDict[rowClicked])
-            if gamestate == "start":
+            if gamestate == "started":
                 gamestate = "select"
             if gamestate == "selected":
                 gamestate = "move"
@@ -108,14 +106,15 @@ while running:
     pygame.display.flip()
 
     if gamestate == "start":
+        checks = updateCheck(board)
         if turn % 2 == 0:
             playerColor = "w"
-            activePlayerInCheck = whiteInCheck
+            activePlayerInCheck = checks[0]
             if len(whitePassantShadow) == 2 and board[whitePassantShadow[0]][whitePassantShadow[1]] == "w_":
                 board[whitePassantShadow[0]][whitePassantShadow[1]] = "  "
         else:
             playerColor = "b"
-            activePlayerInCheck = blackInCheck
+            activePlayerInCheck = checks[1]
             if len(blackPassantShadow) == 2 and board[blackPassantShadow[0]][blackPassantShadow[1]] == "b_":
                 board[blackPassantShadow[0]][blackPassantShadow[1]] = "  "
         if boardDisplay == True:
@@ -134,6 +133,7 @@ while running:
             gamestate = "checkmate"
         if activePlayerInCheck == True:
             print("You are in check and must make a move to escape it.")
+        gamestate = "started"
 
     if gamestate == "select":
         selectedPiecePosition = (int(colDict[cord[0]]), int(rowDict[cord[1]]))
@@ -141,11 +141,12 @@ while running:
         selectedPieceType = board[selectedPiecePosition[1]][selectedPiecePosition[0]]
         if selectedPieceType == "  ":
             print(f"Selected empty tile. Select a {colorDict[playerColor]} piece instead.")
+            gamestate = "started"
         else:
             selectedPieceName = f"{colorDict[selectedPieceType[0]]} {typeDict[selectedPieceType[1]].__name__}"
             if colorDict[selectedPieceType[0]] != colorDict[playerColor]:
                 print(f"Wrong color selected. Select a {colorDict[playerColor]} piece instead.")
-                gamestate = "start"
+                gamestate = "started"
             else:
                 print(f"Selected {selectedPieceName} at {cord}.")
                 gamestate = "selected"
@@ -161,7 +162,7 @@ while running:
             print("Deselected.")
             selectedPiecePosition = None
             moveCord = None
-            gamestate = "start"
+            gamestate = "started"
             
         else:
             currentTile = selectedPiecePosition
@@ -169,105 +170,109 @@ while running:
             if isValidMove(board, currentTile, requestedTile, pieceClass, pieceColor) == False:
                 print("Invalid move. Check piece movement rules, or make sure nothing is in the way.")
                 gamestate = "selected"
-            if checkLegality(board, currentTile, requestedTile, colorDict[playerColor]) == False:
+                pass
+            elif checkLegality(board, currentTile, requestedTile, colorDict[playerColor]) == False:
                 print("That move would put you in check.")
                 gamestate = "selected"
-            if board[requestedTile[1]][requestedTile[0]] != "  " and colorDict[board[requestedTile[1]][requestedTile[0]][0]] == pieceColor:
+                pass
+            elif board[requestedTile[1]][requestedTile[0]] != "  " and colorDict[board[requestedTile[1]][requestedTile[0]][0]] == pieceColor:
                 print("You may not capture your own pieces.")
                 gamestate = "selected"
-            if pieceClass == Knight or collisionDetect(board, currentTile, requestedTile) == True:
-                if pieceClass == Pawn:
-                    if pieceColor == "White":
-                        if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
-                            print("Pawns must capture when they move diagonally.")
-                            gamestate = "selected"
-                        if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
-                            if board[requestedTile[1]][requestedTile[0]] == "b_":
-                                board[lastBlackPassant[0]][lastBlackPassant[1]] = "  "
-                            board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                            board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                            gamestate = "end"
-                        elif currentTile[0] == requestedTile[0]:
-                            if currentTile[1] == (requestedTile[1] + 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
-                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                board[requestedTile[1]+1][requestedTile[0]] = "w_"
-                                whitePassantShadow = (requestedTile[1]+1, requestedTile[0])
-                                lastWhitePassant = (requestedTile[1], requestedTile[0])
-                                gamestate = "end"
-                            elif currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                pass
+            else:
+                if pieceClass == Knight or collisionDetect(board, currentTile, requestedTile) == True:
+                    if pieceClass == Pawn:
+                        if pieceColor == "White":
+                            if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                print("Pawns must capture when they move diagonally.")
+                                gamestate = "selected"
+                            if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
+                                if board[requestedTile[1]][requestedTile[0]] == "b_":
+                                    board[lastBlackPassant[0]][lastBlackPassant[1]] = "  "
                                 board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                 board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                                 gamestate = "end"
+                            elif currentTile[0] == requestedTile[0]:
+                                if currentTile[1] == (requestedTile[1] + 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                    board[requestedTile[1]+1][requestedTile[0]] = "w_"
+                                    whitePassantShadow = (requestedTile[1]+1, requestedTile[0])
+                                    lastWhitePassant = (requestedTile[1], requestedTile[0])
+                                    gamestate = "end"
+                                elif currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                    gamestate = "end"
+                                else:
+                                    print("Invalid move. Check piece movement rules with HELP.")
+                                    gamestate = "selected"
                             else:
                                 print("Invalid move. Check piece movement rules with HELP.")
                                 gamestate = "selected"
-                        else:
-                            print("Invalid move. Check piece movement rules with HELP.")
-                            gamestate = "selected"
-                        if requestedTile[1] == 0:
-                            print("Congratulations, your Pawn has reached the end of the board! \n You may turn it into a Rook (R), Knight (K), Bishop (B), or Queen (Q).")
-                            gamestate = "promote"
-                                
+                            if requestedTile[1] == 0:
+                                print("Congratulations, your Pawn has reached the end of the board! \n You may turn it into a Rook (R), Knight (K), Bishop (B), or Queen (Q).")
+                                gamestate = "promote"
                                     
-                    else:
-                        if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
-                            print("Pawns must capture when they move diagonally.")
-                            gamestate = "selected"
-                        if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
-                            if board[requestedTile[1]][requestedTile[0]] == "w_":
-                                board[lastWhitePassant[0]][lastWhitePassant[1]] = "  "
-                            board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                            board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
-                            board[currentTile[1]][currentTile[0]] = "  "
-                            gamestate = "end"
-                        elif currentTile[0] == requestedTile[0]:
-                            if currentTile[1] == (requestedTile[1] - 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
-                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
-                                board[requestedTile[1]-1][requestedTile[0]] = "b_"
-                                blackPassantShadow = (requestedTile[1]-1, requestedTile[0])
-                                lastBlackPassant = (requestedTile[1], requestedTile[0])
-                                board[currentTile[1]][currentTile[0]] = "  "
-                                gamestate = "end"
-                            elif currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                        
+                        else:
+                            if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                print("Pawns must capture when they move diagonally.")
+                                gamestate = "selected"
+                            if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
+                                if board[requestedTile[1]][requestedTile[0]] == "w_":
+                                    board[lastWhitePassant[0]][lastWhitePassant[1]] = "  "
                                 board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                 board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
                                 board[currentTile[1]][currentTile[0]] = "  "
                                 gamestate = "end"
+                            elif currentTile[0] == requestedTile[0]:
+                                if currentTile[1] == (requestedTile[1] - 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
+                                    board[requestedTile[1]-1][requestedTile[0]] = "b_"
+                                    blackPassantShadow = (requestedTile[1]-1, requestedTile[0])
+                                    lastBlackPassant = (requestedTile[1], requestedTile[0])
+                                    board[currentTile[1]][currentTile[0]] = "  "
+                                    gamestate = "end"
+                                elif currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
+                                    board[currentTile[1]][currentTile[0]] = "  "
+                                    gamestate = "end"
+                                else:
+                                    print("Invalid move. Check piece movement rules with HELP.")
+                                    gamestate = "selected"
                             else:
                                 print("Invalid move. Check piece movement rules with HELP.")
                                 gamestate = "selected"
-                        else:
-                            print("Invalid move. Check piece movement rules with HELP.")
-                            gamestate = "selected"
-                        if requestedTile[1] == 7:    
-                            print("Congratulations, your Pawn has reached the end of the board! \n You may turn it into a Rook (R), Knight (K), Bishop (B), or Queen (Q).")
-                            gamestate = "promote"
-                                    
-                elif pieceClass == King:
-                        distanceCheck = (abs(currentTile[0] - requestedTile[0]), abs(currentTile[1] - requestedTile[1]))
-                        if distanceCheck[0] == 2 and canCastle(board, currentTile, requestedTile, pieceColor):
-                            if requestedTile[0] - currentTile[0] == 2:
+                            if requestedTile[1] == 7:    
+                                print("Congratulations, your Pawn has reached the end of the board! \n You may turn it into a Rook (R), Knight (K), Bishop (B), or Queen (Q).")
+                                gamestate = "promote"
+                                        
+                    elif pieceClass == King:
+                            distanceCheck = (abs(currentTile[0] - requestedTile[0]), abs(currentTile[1] - requestedTile[1]))
+                            if distanceCheck[0] == 2 and canCastle(board, currentTile, requestedTile, pieceColor):
+                                if requestedTile[0] - currentTile[0] == 2:
+                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                    board[currentTile[1]][5] = board[currentTile[1]][7]
+                                    board[currentTile[1]][7] = "  "
+                                    gamestate = "end"
+                                else:
+                                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                                    board[currentTile[1]][3] = board[currentTile[1]][0]
+                                    board[currentTile[1]][0] = "  "
+                                    gamestate = "end"
+                            elif distanceCheck[0] <= 1 and distanceCheck[1] <= 1 and sum(distanceCheck) > 0:
                                 board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                 board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                board[currentTile[1]][5] = board[currentTile[1]][7]
-                                board[currentTile[1]][7] = "  "
                                 gamestate = "end"
-                            else:
-                                board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                                board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                                board[currentTile[1]][3] = board[currentTile[1]][0]
-                                board[currentTile[1]][0] = "  "
-                                gamestate = "end"
-                        elif distanceCheck[0] <= 1 and distanceCheck[1] <= 1 and sum(distanceCheck) > 0:
-                            board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                            board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                            gamestate = "end"
-                elif isValidMove(board, currentTile, requestedTile, pieceClass, pieceColor):
-                    board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
-                    board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
-                    gamestate = "end"
+                    elif isValidMove(board, currentTile, requestedTile, pieceClass, pieceColor):
+                        board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
+                        board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
+                        gamestate = "end"
 
     if gamestate == "end":
         boardDisplay = True

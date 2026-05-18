@@ -169,13 +169,6 @@ def attackCheck(board, current, enemyColor):
                     return True
     return False
 
-def isLegal(board, current, request, pieceClass, color):
-    if not isValidMove(board, current, request, pieceClass, color):
-        return False
-    if board[request[1]][request[0]] != "  " and colorDict[board[request[1]][request[0]][0]] == color:
-        return False
-    return True      
-
 def simulateMove(board, current, request):
     testBoard = copy.deepcopy(board)
     piece = testBoard[current[1]][current[0]]
@@ -207,6 +200,7 @@ def updateCheck(board):
     bKing = findKing(board, "Black")
     whiteInCheck = attackCheck(board, wKing, "Black")
     blackInCheck = attackCheck(board, bKing, "White")
+    return (whiteInCheck, blackInCheck)
 
 def checkmateCheck(board, color):
     if color == "White":
@@ -241,12 +235,11 @@ def checkmateCheck(board, color):
 
                     pieceClass = typeDict[piece[1]]
 
-                    if not isValidMove(board, current, request, pieceClass, color):
-                        continue
-                    if not checkLegality(board, current, request, color):
-                        continue
+                    if isValidMove(board, current, request, pieceClass, color):
+                        if checkLegality(board, current, request, color):
+                            return False
 
-                    return True
+    return True
 
 def canCastle(board, current, request, color):
     king = board[current[1]][current[0]]

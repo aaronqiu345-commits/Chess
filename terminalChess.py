@@ -13,7 +13,7 @@ board = [
     ["BR","bN","bB","bQ","BK","bB","bN","BR"],
     ["BP","BP","BP","BP","BP","BP","BP","BP"],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
-    ["  ","  ","  ","  ","  ","  ","  ","  "],
+    ["  ","  ","  ","  ","wR","  ","  ","  "],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["  ","  ","  ","  ","  ","  ","  ","  "],
     ["WP","WP","WP","WP","WP","WP","WP","WP"],
@@ -39,19 +39,18 @@ lastBlackPassant = ""
 whitePassantShadow = ""
 blackPassantShadow = ""
 validPromotions = ("R", "K", "B", "Q")
-whiteInCheck = False
-blackInCheck = False
 activePlayerInCheck = False
 
 while True:
+    checks = updateCheck(board)
     if turn % 2 == 0:
         playerColor = "w"
-        activePlayerInCheck = whiteInCheck
+        activePlayerInCheck = checks[0]
         if len(whitePassantShadow) == 2 and board[whitePassantShadow[0]][whitePassantShadow[1]] == "w_":
             board[whitePassantShadow[0]][whitePassantShadow[1]] = "  "
     else:
         playerColor = "b"
-        activePlayerInCheck = blackInCheck
+        activePlayerInCheck = checks[1]
         if len(blackPassantShadow) == 2 and board[blackPassantShadow[0]][blackPassantShadow[1]] == "b_":
             board[blackPassantShadow[0]][blackPassantShadow[1]] = "  "
         
@@ -61,7 +60,6 @@ while True:
             print(index, line)
         print(board[8])
         print(colDividers)
-    updateCheck(board)
     if checkmateCheck(board, "White"):
         print("White cannot escape check. Black wins!")
         break
