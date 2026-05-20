@@ -100,6 +100,7 @@ while True:
                     if board[requestedTile[1]][requestedTile[0]] != "  " and colorDict[board[requestedTile[1]][requestedTile[0]][0]] == pieceColor:
                         print(f"You may not capture your own pieces.")
                         continue
+                    print(requestedTile)
                     if pieceClass == Knight or collisionDetect(board, currentTile, requestedTile) == True:
                         if pieceClass == Pawn:
                             if pieceColor == "White":

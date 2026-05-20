@@ -67,7 +67,7 @@ def collisionDetect(board, current, request):
 
     checkX = curX + moveX
     checkY = curY + moveY
-    while (checkX, checkY) != (reqX, reqY):
+    while (checkX, checkY) != (reqX, reqY) and checkX < 7 and checkY < 7:
         if board[checkY][checkX] != "  ":
             return False
         checkX += moveX
@@ -107,15 +107,15 @@ def isValidMove(board, current, request, pieceClass, pieceColor):
             if board[request[1]][request[0]] != "  ":
                 return abs(current[0] - request[0]) == 1 and current[1] == (request[1] + 1)
             else:
-                return ((current[1] == (request[1] + 2) and board[current[1]][current[0]] == board[current[1]][current[0]].upper()) or current[1] == (request[1] + 1))
+                return collisionDetect(board, current, request) and current[0] - request[0] == 0 and (((current[1] == (request[1] + 2) and board[current[1]][current[0]] == board[current[1]][current[0]].upper()) or current[1] == (request[1] + 1)))
 
         if pieceColor == "Black":
             if board[request[1]][request[0]] != "  ":
                 if abs(current[0] - request[0]) == 1 and current[1] == (request[1] - 1):
-                    return collisionDetect(board, current, request)
+                    return abs(current[0] - request[0]) == 1 and current[1] == (request[1] - 1)
             else:
                 if ((current[1] == (request[1] - 2) and board[current[1]][current[0]] == board[current[1]][current[0]].upper()) or current[1] == (request[1] - 1)):
-                    return collisionDetect(board, current, request)
+                    return collisionDetect(board, current, request) and current[0] - request[0] == 0 and (((current[1] == (request[1] - 2) and board[current[1]][current[0]] == board[current[1]][current[0]].upper()) or current[1] == (request[1] - 1)))
     return False
 
 def findKing(board, color):
