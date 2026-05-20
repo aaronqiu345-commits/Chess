@@ -190,13 +190,10 @@ while running:
             requestedTile = moveCord
             if isValidMove(board, currentTile, requestedTile, pieceClass, pieceColor) == False:
                 gamestate = "selected"
-                pass
             elif checkLegality(board, currentTile, requestedTile, colorDict[playerColor]) == False:
                 gamestate = "selected"
-                pass
             elif board[requestedTile[1]][requestedTile[0]] != "  " and colorDict[board[requestedTile[1]][requestedTile[0]][0]] == pieceColor:
                 gamestate = "selected"
-                pass
             else:
                 if pieceClass == Knight or collisionDetect(board, currentTile, requestedTile) == True:
                     if pieceClass == Pawn:
@@ -283,6 +280,7 @@ while running:
                         board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                         board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                         gamestate = "end"
+
 
     if gamestate == "end":
         turn += 1
