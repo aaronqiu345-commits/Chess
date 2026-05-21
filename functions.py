@@ -68,7 +68,7 @@ def collisionDetect(board, current, request):
     checkX = curX + moveX
     checkY = curY + moveY
     while (checkX, checkY) != (reqX, reqY) and checkX < 8 and checkY < 8:
-        if board[checkY][checkX] != "  ":
+        if board[checkY][checkX] not in ("  ", "w_", "b_"):
             return False
         checkX += moveX
         checkY += moveY
