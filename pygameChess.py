@@ -75,7 +75,7 @@ for i, row in enumerate(board[:8]):
             piecePosition = (f"{colDict[str(posDex[0])]}{rowDict[str(posDex[1])]}")
             makePiece = pieceType(pieceColor, piecePosition)
     
-# playing field: board[0][1] to board[7][8]
+# playing field: board[0][0] to board[7][7]
 turn = 0
 lastWhitePassant = ""
 lastBlackPassant = ""
@@ -119,6 +119,7 @@ while running:
 
     if gamestate == "start":
         checks = updateCheck(board)
+        renderBoard()
         if turn % 2 == 0:
             playerColor = "w"
             activePlayerInCheck = checks[0]
@@ -131,15 +132,13 @@ while running:
                 board[blackPassantShadow[0]][blackPassantShadow[1]] = "  "
             updateCheck(board)
         if checkmateCheck(board, "White"):
-            print("checkmate")
             screen.blit(text.render("Black wins!", True, textColor), (0.8*screenWidth/2, screenHeight/2))
             gamestate = "checkmate"
         if checkmateCheck(board, "Black"):
-            print("checkmate")
             screen.blit(text.render("White wins!", True, textColor), (0.8*screenWidth/2, screenHeight/2))
             gamestate = "checkmate"
-        renderBoard()
-        gamestate = "started"
+        if gamestate != "checkmate":
+            gamestate = "started"
 
     if gamestate == "select":
         selectedPiecePosition = (int(colDict[cord[0]]), int(rowDict[cord[1]]))

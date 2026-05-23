@@ -31,7 +31,7 @@ for i, row in enumerate(board[:8]):
             makePiece = pieceType(pieceColor, piecePosition)
             print(f"Created {pieceColor} {pieceType.__name__} at {piecePosition}")
 
-# playing field: board[0][1] to board[7][8]
+# playing field: board[0][1] to board[7][7]
 turn = 0
 boardDisplay = True
 lastWhitePassant = ""
