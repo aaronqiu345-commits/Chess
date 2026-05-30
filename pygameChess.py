@@ -1,4 +1,5 @@
 from functions import *
+import copy
 import pygame
 import sys
 
@@ -66,6 +67,18 @@ board = [
     ["__________________________________________________"]
 ]
 
+bboard = [
+    ["BR","  ","  ","  ","BK","bB","bN","BR"],
+    ["BP","  ","  ","bN","  ","  ","BP","BP"],
+    ["  ","bP","  ","  ","  ","bP","  ","  "],
+    ["  ","  ","bP","  ","  ","  ","bQ","  "],
+    ["wQ","  ","wP","bP","bP","  ","wB","  "],
+    ["  ","wP","  ","wP","  ","wP","bN","  "],
+    ["WP","wB","  ","wN","WP","  ","  ","WP"],
+    ["WR","  ","  ","  ","WK","wB","wN","WR"],
+    ["__________________________________________________"]
+]
+
 for i, row in enumerate(board[:8]):
     for j, piece in enumerate(row):
         if piece != "  ":
@@ -84,6 +97,7 @@ blackPassantShadow = ""
 activePlayerInCheck = False
 running = True
 gamestate = "start"
+past = []
 
 while running:    
     for event in pygame.event.get():
@@ -109,6 +123,11 @@ while running:
                 board[requestedTile[1]][requestedTile[0]] = board[requestedTile[1]][requestedTile[0]][0] + "Q"
             renderBoard()
             gamestate = "end"
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_u:
+            if len(past) > 0:
+                board = past.pop()
+                turn -= 1
+                gamestate = "start"
 
     pygame.display.flip()
 
@@ -119,7 +138,6 @@ while running:
 
     if gamestate == "start":
         checks = updateCheck(board)
-        renderBoard()
         if turn % 2 == 0:
             playerColor = "w"
             activePlayerInCheck = checks[0]
@@ -131,6 +149,7 @@ while running:
             if len(blackPassantShadow) == 2 and board[blackPassantShadow[0]][blackPassantShadow[1]] == "b_":
                 board[blackPassantShadow[0]][blackPassantShadow[1]] = "  "
             updateCheck(board)
+        renderBoard()
         if checkmateCheck(board, "White"):
             screen.blit(text.render("Black wins!", True, textColor), (0.8*screenWidth/2, screenHeight/2))
             gamestate = "checkmate"
@@ -176,14 +195,12 @@ while running:
                 
 
     if gamestate == "move":
-
         moveCord = (int(colDict[cord[0]]), int(rowDict[cord[1]]))
         if moveCord == selectedPiecePosition:
             renderBoard()
             selectedPiecePosition = None
             moveCord = None
             gamestate = "started"
-            
         else:
             currentTile = selectedPiecePosition
             requestedTile = moveCord
@@ -200,6 +217,7 @@ while running:
                             if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
                                 gamestate = "selected"
                             if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
+                                past.append(copy.deepcopy(board))
                                 if board[requestedTile[1]][requestedTile[0]] == "b_":
                                     board[lastBlackPassant[0]][lastBlackPassant[1]] = "  "
                                 board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
@@ -207,6 +225,7 @@ while running:
                                 gamestate = "end"
                             elif currentTile[0] == requestedTile[0]:
                                 if currentTile[1] == (requestedTile[1] + 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                    past.append(copy.deepcopy(board))
                                     board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                     board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                                     board[requestedTile[1]+1][requestedTile[0]] = "w_"
@@ -214,6 +233,7 @@ while running:
                                     lastWhitePassant = (requestedTile[1], requestedTile[0])
                                     gamestate = "end"
                                 elif currentTile[1] == (requestedTile[1] + 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                    past.append(copy.deepcopy(board))
                                     board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                     board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                                     gamestate = "end"
@@ -229,6 +249,7 @@ while running:
                             if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
                                 gamestate = "selected"
                             if abs(currentTile[0] - requestedTile[0]) == 1 and currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] != "  ":
+                                past.append(copy.deepcopy(board))
                                 if board[requestedTile[1]][requestedTile[0]] == "w_":
                                     board[lastWhitePassant[0]][lastWhitePassant[1]] = "  "
                                 board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
@@ -237,6 +258,7 @@ while running:
                                 gamestate = "end"
                             elif currentTile[0] == requestedTile[0]:
                                 if currentTile[1] == (requestedTile[1] - 2) and board[currentTile[1]][currentTile[0]] == board[currentTile[1]][currentTile[0]].upper() and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                    past.append(copy.deepcopy(board))
                                     board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                     board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
                                     board[requestedTile[1]-1][requestedTile[0]] = "b_"
@@ -245,6 +267,7 @@ while running:
                                     board[currentTile[1]][currentTile[0]] = "  "
                                     gamestate = "end"
                                 elif currentTile[1] == (requestedTile[1] - 1) and board[requestedTile[1]][requestedTile[0]] == "  ":
+                                    past.append(copy.deepcopy(board))
                                     board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                     board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], board[requestedTile[1]][requestedTile[0]]
                                     board[currentTile[1]][currentTile[0]] = "  "
@@ -260,22 +283,26 @@ while running:
                             distanceCheck = (abs(currentTile[0] - requestedTile[0]), abs(currentTile[1] - requestedTile[1]))
                             if distanceCheck[0] == 2 and canCastle(board, currentTile, requestedTile, pieceColor):
                                 if requestedTile[0] - currentTile[0] == 2:
+                                    past.append(copy.deepcopy(board))
                                     board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                     board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                                     board[currentTile[1]][5] = board[currentTile[1]][7]
                                     board[currentTile[1]][7] = "  "
                                     gamestate = "end"
                                 else:
+                                    past.append(copy.deepcopy(board))
                                     board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                     board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                                     board[currentTile[1]][3] = board[currentTile[1]][0]
                                     board[currentTile[1]][0] = "  "
                                     gamestate = "end"
                             elif distanceCheck[0] <= 1 and distanceCheck[1] <= 1 and sum(distanceCheck) > 0:
+                                past.append(copy.deepcopy(board))
                                 board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                                 board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                                 gamestate = "end"
                     elif isValidMove(board, currentTile, requestedTile, pieceClass, pieceColor):
+                        past.append(copy.deepcopy(board))
                         board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]][0].lower() + board[currentTile[1]][currentTile[0]][1]
                         board[requestedTile[1]][requestedTile[0]], board[currentTile[1]][currentTile[0]] = board[currentTile[1]][currentTile[0]], "  "
                         gamestate = "end"

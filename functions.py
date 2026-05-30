@@ -67,12 +67,16 @@ def collisionDetect(board, current, request):
 
     checkX = curX + moveX
     checkY = curY + moveY
-    while (checkX, checkY) != (reqX, reqY) and checkX < 8 and checkY < 8:
-        if board[checkY][checkX] not in ("  ", "w_", "b_"):
-            return False
-        checkX += moveX
-        checkY += moveY
-    return True
+    try:
+        while (checkX, checkY) != (reqX, reqY) and checkX < 8 and checkY < 8:
+            if board[checkY][checkX] not in ("  ", "w_", "b_"):
+                return False
+            checkX += moveX
+            checkY += moveY
+        return True
+    except:
+        print("TERRIBLE GAME ENDING BUG WAS FOUND")
+        return True
 
 def isValidMove(board, current, request, pieceClass, pieceColor):
 
